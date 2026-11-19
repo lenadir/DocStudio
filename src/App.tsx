@@ -46,6 +46,7 @@ export default function App() {
   const [snap, setSnap] = useState(true)
 
   const [printSides, setPrintSides] = useState({ front: true, back: true })
+  const [rotateBack, setRotateBack] = useState(false)
   const [printRows, setPrintRows] = useState<Record<string, string>[] | null>(null)
   const [toast, setToast] = useState<string | null>(null)
 
@@ -254,6 +255,12 @@ export default function App() {
     }
     const data = rows.length ? (which === 'current' ? [values] : rows) : [{}]
     setPrintRows(data)
+    if (activeSides.length === 2) {
+      setToast(
+        `${data.length} sheet${data.length > 1 ? 's' : ''}: recto then verso for each record. ` +
+          'In the print dialog turn on Two-sided so both land on the same sheet.',
+      )
+    }
   }
 
   useEffect(() => {
@@ -442,7 +449,7 @@ export default function App() {
                   checked={printSides.front}
                   onChange={(e) => setPrintSides((p) => ({ ...p, front: e.target.checked }))}
                 />
-                Front
+                Front (recto)
               </label>
               <label className={`check${hasBack ? '' : ' is-disabled'}`}>
                 <input
@@ -451,7 +458,19 @@ export default function App() {
                   checked={printSides.back && hasBack}
                   onChange={(e) => setPrintSides((p) => ({ ...p, back: e.target.checked }))}
                 />
-                Back
+                Back (verso)
+              </label>
+              <label
+                className={`check${hasBack && printSides.back ? '' : ' is-disabled'}`}
+                title="Turn every back page upside down. Use it if the verso comes out rotated on your printer."
+              >
+                <input
+                  type="checkbox"
+                  disabled={!hasBack || !printSides.back}
+                  checked={rotateBack}
+                  onChange={(e) => setRotateBack(e.target.checked)}
+                />
+                Flip verso 180°
               </label>
               <button className="btn btn--small" onClick={() => startPrint('current')}>
                 Print this one
@@ -504,6 +523,7 @@ export default function App() {
           fields={fields}
           rows={printRows}
           sides={activeSides}
+          rotateBack={rotateBack}
         />
       )}
     </div>

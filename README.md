@@ -72,8 +72,15 @@ In the browser's print dialog set **Margins: None** and **Scale: 100%**, and ena
 **Background graphics** so the template image prints. The page size is emitted as a real
 `@page` rule, so the printer should already offer the right paper.
 
-Printing both sides: *Print all* emits front, back, front, back… so duplex printing lands
-each back on the reverse of its own front.
+Printing both sides (recto/verso): *Print all* emits recto, verso, recto, verso… one pair
+per record, so with **Two-sided** switched on in the print dialog each verso lands on the
+reverse of its own recto, on the same sheet. A record always produces exactly two pages, so
+pairs can never drift out of step.
+
+- If the verso comes out upside down (common with landscape sheets and long-edge flipping),
+  tick **Flip verso 180°** before printing.
+- No two-sided printer? Untick *Back (verso)* and print the rectos, put the stack back in the
+  tray, then untick *Front (recto)*, tick *Back (verso)* and print again.
 
 ### Layouts
 

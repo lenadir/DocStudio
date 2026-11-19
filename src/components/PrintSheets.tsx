@@ -8,20 +8,23 @@ interface Props {
   fields: Field[]
   rows: Record<string, string>[]
   sides: Side[]
+  /** Turn every back page 180 degrees, for printers whose two-sided mode flips the verso upside down. */
+  rotateBack?: boolean
 }
 
 /**
- * One printed page per row per side, at the exact millimetre size of the card.
- * Rendered with the same component as the editor, so the preview is the print.
+ * One page per row per side, in the order recto, verso, recto, verso...
+ * With two-sided printing on, page 1 + page 2 land on the two faces of the same sheet,
+ * page 3 + page 4 on the next sheet, and so on. Every record always yields the same number
+ * of pages, so a record's verso can never slip onto the next record's sheet.
  */
-/** One page per row per side — front before back, rows in sheet order. */
 export function buildPages(rows: Record<string, string>[], sides: Side[]) {
   return rows.flatMap((values, index) =>
-    sides.map((side) => ({ key: `${index}-${side}`, side, values })),
+    sides.map((side) => ({ key: `${index}-${side}`, index, side, values })),
   )
 }
 
-export default function PrintSheets({ card, images, fields, rows, sides }: Props) {
+export default function PrintSheets({ card, images, fields, rows, sides, rotateBack = false }: Props) {
   const u = (mm: number) => `${mm}mm`
   const pages = buildPages(rows, sides)
 
@@ -32,16 +35,26 @@ export default function PrintSheets({ card, images, fields, rows, sides }: Props
         <div
           className="print-page"
           key={page.key}
+          data-record={page.index + 1}
+          data-side={page.side}
           style={{ width: u(card.w), height: u(card.h) }}
         >
-          <CardFace
-            side={page.side}
-            card={card}
-            image={images[page.side]}
-            fields={fields}
-            values={page.values}
-            u={u}
-          />
+          <div
+            style={{
+              width: u(card.w),
+              height: u(card.h),
+              transform: rotateBack && page.side === 'back' ? 'rotate(180deg)' : undefined,
+            }}
+          >
+            <CardFace
+              side={page.side}
+              card={card}
+              image={images[page.side]}
+              fields={fields}
+              values={page.values}
+              u={u}
+            />
+          </div>
         </div>
       ))}
     </div>,

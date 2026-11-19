@@ -622,3 +622,16 @@ input.color {
   gap: 5px;
   min-width: 0;
 }
+
+@media print {
+  html,
+  body {
+    margin: 0;
+    height: auto;
+  }
+  /* A trailing forced break would add a blank sheet after the last record. */
+  .print-page:last-child {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+}
