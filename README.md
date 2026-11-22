@@ -68,9 +68,16 @@ that never saw your design.
 
 ### Printer settings that matter
 
-In the browser's print dialog set **Margins: None** and **Scale: 100%**, and enable
-**Background graphics** so the template image prints. The page size is emitted as a real
-`@page` rule, so the printer should already offer the right paper.
+**The template is never printed.** It is a positioning guide on screen only. What goes on
+paper is strictly the values you placed, so you feed your real pre-printed certificates
+through the printer and the app overprints the names, numbers and dates onto them.
+
+In the browser's print dialog set **Margins: None** and **Scale: 100%**. The page size is
+emitted as a real `@page` rule, so the printer should already offer the right paper.
+Leave **Background graphics** off — nothing depends on it any more.
+
+Because only text is printed, do a test run on a blank sheet first and hold it against a
+real certificate to check the alignment before using your actual stock.
 
 Printing both sides (recto/verso): *Print all* emits recto, verso, recto, verso… one pair
 per record, so with **Two-sided** switched on in the print dialog each verso lands on the

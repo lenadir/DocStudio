@@ -34,6 +34,10 @@ export default function Sidebar(p: Props) {
         <h2>
           <span className="step">1</span> Certificate template
         </h2>
+        <p className="hint">
+          On-screen guide only — <strong>the template is never printed</strong>. Only the values
+          you place get printed, onto your pre-printed certificates.
+        </p>
         {(['front', 'back'] as Side[]).map((side) => (
           <div className="upload-row" key={side}>
             <div className="thumb">

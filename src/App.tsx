@@ -519,7 +519,6 @@ export default function App() {
       {printRows && (
         <PrintSheets
           card={card}
-          images={images}
           fields={fields}
           rows={printRows}
           sides={activeSides}

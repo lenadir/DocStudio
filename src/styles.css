@@ -635,3 +635,19 @@ input.color {
     page-break-after: avoid;
   }
 }
+
+/* ---------- print: values only, never the template ---------- */
+
+@media print {
+  /* Safety net. PrintSheets already refuses to render a background, but if one ever
+     reaches the print tree it still must not reach paper: sheets are pre-printed stock. */
+  .print-root .card-bg,
+  .print-root .card-placeholder {
+    display: none !important;
+  }
+  /* No white fill over pre-printed artwork. */
+  .print-root .card,
+  .print-root .print-page {
+    background: transparent !important;
+  }
+}

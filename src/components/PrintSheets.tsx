@@ -4,7 +4,8 @@ import CardFace from './CardFace'
 
 interface Props {
   card: Card
-  images: { front: string | null; back: string | null }
+  // No `images` prop on purpose: the print output must never carry the uploaded
+  // template. Not accepting it at all makes that impossible to undo by accident.
   fields: Field[]
   rows: Record<string, string>[]
   sides: Side[]
@@ -13,6 +14,10 @@ interface Props {
 }
 
 /**
+ * Prints the placed values ONLY -- never the uploaded front/back template, which exists
+ * purely to position fields on screen. Sheets are expected to be pre-printed stock that
+ * goes through the printer to receive the variable text.
+ *
  * One page per row per side, in the order recto, verso, recto, verso...
  * With two-sided printing on, page 1 + page 2 land on the two faces of the same sheet,
  * page 3 + page 4 on the next sheet, and so on. Every record always yields the same number
@@ -24,7 +29,7 @@ export function buildPages(rows: Record<string, string>[], sides: Side[]) {
   )
 }
 
-export default function PrintSheets({ card, images, fields, rows, sides, rotateBack = false }: Props) {
+export default function PrintSheets({ card, fields, rows, sides, rotateBack = false }: Props) {
   const u = (mm: number) => `${mm}mm`
   const pages = buildPages(rows, sides)
 
@@ -49,7 +54,11 @@ export default function PrintSheets({ card, images, fields, rows, sides, rotateB
             <CardFace
               side={page.side}
               card={card}
-              image={images[page.side]}
+              // The template is a positioning guide for the screen only. Printing happens
+              // onto pre-printed stock, so the background must never be put on paper --
+              // only the values placed on top of it. Passing null keeps the image out of
+              // the print tree entirely (print.css also hides .card-bg as a safety net).
+              image={null}
               fields={fields}
               values={page.values}
               u={u}
