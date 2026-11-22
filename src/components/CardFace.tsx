@@ -68,13 +68,57 @@ export default function CardFace({
       {fields
         .filter((f) => f.side === side)
         .map((f) => {
-          const text = fieldText(f, values)
-          const empty = text === ''
           const s = f.style
-          const style: CSSProperties = {
+          const selected = selectedId === f.id
+
+          // Position, box width and rotation are shared by text and image fields.
+          const box: CSSProperties = {
             left: `${f.x}%`,
             top: `${f.y}%`,
             width: `${s.width}%`,
+            transform: s.rotation ? `rotate(${s.rotation}deg)` : undefined,
+          }
+
+          const handle = selected && (
+            <span
+              className="field-handle"
+              onPointerDown={(e) => onResizePointerDown?.(e, f)}
+              title={f.kind === 'image' ? 'Drag to resize the image' : 'Drag to set the text box width'}
+            />
+          )
+
+          /* ---------- image field: width is set, height follows the picture ---------- */
+          if (f.kind === 'image') {
+            const pic = f.src ? (
+              <img className="field-img" src={f.src} alt="" draggable={false} />
+            ) : null
+
+            if (!interactive) {
+              return pic ? (
+                <div key={f.id} className="field field--image" style={box}>
+                  {pic}
+                </div>
+              ) : null
+            }
+            return (
+              <div
+                key={f.id}
+                className={`field field--edit field--image${selected ? ' is-selected' : ''}`}
+                style={box}
+                onPointerDown={(e) => onFieldPointerDown?.(e, f)}
+                title="Image"
+              >
+                {pic ?? <span className="field-img-empty">image missing</span>}
+                {handle}
+              </div>
+            )
+          }
+
+          /* ---------- text field ---------- */
+          const text = fieldText(f, values)
+          const empty = text === ''
+          const style: CSSProperties = {
+            ...box,
             fontSize: u(s.fontSize),
             fontFamily: s.fontFamily,
             color: s.color,
@@ -82,7 +126,6 @@ export default function CardFace({
             fontStyle: s.italic ? 'italic' : 'normal',
             textAlign: s.align,
             letterSpacing: u(s.letterSpacing),
-            transform: s.rotation ? `rotate(${s.rotation}deg)` : undefined,
           }
 
           if (!interactive) {
@@ -96,21 +139,13 @@ export default function CardFace({
           return (
             <div
               key={f.id}
-              className={`field field--edit${selectedId === f.id ? ' is-selected' : ''}${
-                empty ? ' is-empty' : ''
-              }`}
+              className={`field field--edit${selected ? ' is-selected' : ''}${empty ? ' is-empty' : ''}`}
               style={style}
               onPointerDown={(e) => onFieldPointerDown?.(e, f)}
               title={f.column || 'Static text'}
             >
               {empty ? f.column || 'text' : text}
-              {selectedId === f.id && (
-                <span
-                  className="field-handle"
-                  onPointerDown={(e) => onResizePointerDown?.(e, f)}
-                  title="Drag to set the text box width"
-                />
-              )}
+              {handle}
             </div>
           )
         })}

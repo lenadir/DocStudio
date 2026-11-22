@@ -8,6 +8,7 @@ interface Props {
   onUpdateStyle: (id: string, patch: Partial<FieldStyle>) => void
   onDuplicate: (id: string) => void
   onDelete: (id: string) => void
+  onReplaceImage: (id: string, file: File) => void
 }
 
 export default function Inspector({
@@ -17,6 +18,7 @@ export default function Inspector({
   onUpdateStyle,
   onDuplicate,
   onDelete,
+  onReplaceImage,
 }: Props) {
   if (!field) {
     return (
@@ -40,6 +42,105 @@ export default function Inspector({
   const missing = f.column !== '' && !columns.includes(f.column)
   const set = (patch: Partial<Field>) => onUpdate(f.id, patch)
   const setStyle = (patch: Partial<FieldStyle>) => onUpdateStyle(f.id, patch)
+
+  /* An image has no font, text or column: just size, position, rotation and side. */
+  if (f.kind === 'image') {
+    return (
+      <aside className="inspector">
+        <h2>Image</h2>
+
+        <div className="upload-row">
+          <div className="thumb">
+            {f.src ? <img src={f.src} alt="" /> : <span>none</span>}
+          </div>
+          <label className="btn btn--small">
+            Replace image
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) onReplaceImage(f.id, file)
+                e.target.value = ''
+              }}
+            />
+          </label>
+        </div>
+
+        <div className="control-row">
+          <label className="control">
+            <span>Width (%)</span>
+            <input
+              type="number"
+              min={2}
+              max={150}
+              step={1}
+              value={s.width}
+              onChange={(e) => setStyle({ width: Number(e.target.value) || 2 })}
+            />
+          </label>
+          <label className="control">
+            <span>Rotate (°)</span>
+            <input
+              type="number"
+              step={1}
+              min={-180}
+              max={180}
+              value={s.rotation}
+              onChange={(e) => setStyle({ rotation: Number(e.target.value) || 0 })}
+            />
+          </label>
+        </div>
+
+        <div className="control-row">
+          <label className="control">
+            <span>X (%)</span>
+            <input
+              type="number"
+              step={0.5}
+              value={f.x}
+              onChange={(e) => set({ x: Number(e.target.value) })}
+            />
+          </label>
+          <label className="control">
+            <span>Y (%)</span>
+            <input
+              type="number"
+              step={0.5}
+              value={f.y}
+              onChange={(e) => set({ y: Number(e.target.value) })}
+            />
+          </label>
+        </div>
+
+        <label className="control">
+          <span>Side</span>
+          <select value={f.side} onChange={(e) => set({ side: e.target.value as Side })}>
+            <option value="front">Front (recto)</option>
+            <option value="back">Back (verso)</option>
+          </select>
+        </label>
+
+        <p className="hint">Drag the dot on the right edge to resize. The height follows the picture.</p>
+
+        <div className="btn-grid">
+          <button
+            className="btn btn--small"
+            onClick={() => set({ x: Math.round(((100 - s.width) / 2) * 100) / 100 })}
+            title="Centre the image across the card"
+          >
+            Centre
+          </button>
+          <button className="btn btn--small" onClick={() => onDuplicate(f.id)}>
+            Duplicate
+          </button>
+        </div>
+        <button className="btn btn--danger btn--small btn--block" onClick={() => onDelete(f.id)}>
+          Delete image
+        </button>
+      </aside>
+    )
+  }
 
   return (
     <aside className="inspector">

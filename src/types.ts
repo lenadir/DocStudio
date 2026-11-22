@@ -25,9 +25,19 @@ export interface FieldStyle {
   width: number
 }
 
+export type FieldKind = 'text' | 'image'
+
 export interface Field {
   id: string
   side: Side
+  /**
+   * 'text'  = a value from Excel (or fixed text).
+   * 'image' = an uploaded picture (logo, signature, stamp, photo). Unlike the template
+   *           background, image fields ARE printed.
+   */
+  kind: FieldKind
+  /** Image fields only: the picture as a data URL. Empty for text fields. */
+  src: string
   /** Excel column name this field is bound to. Empty string = static text. */
   column: string
   /** Used when column is empty. */

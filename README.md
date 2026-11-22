@@ -61,6 +61,13 @@ that never saw your design.
    move it, use the right panel for font, size (in mm), colour, alignment, rotation,
    prefix/suffix. Arrow keys nudge (Shift = bigger steps), Delete removes a field.
    Double-clicking a column drops it in the middle of the card.
+   **Images** — click *+ Add image* to place a logo, signature, stamp or photo (PNG, JPG,
+   WebP, SVG; PNG transparency is kept). It lands on the side you are viewing; drag it, drag
+   the dot on its right edge to resize (height follows the picture), or use the right panel
+   to set width, rotation and side. Unlike the template, image fields **are printed**, and
+   the same picture appears on every record. Fields stack in the order they were added, so
+   an image added after a text field sits on top of it. Large uploads are scaled down to
+   1600 px so Save still fits in the browser's storage.
 5. **Check** — step through rows with `‹` `›` to confirm long names and odd values still fit.
 6. **Print** — tick which sides to print, then *Print this one* or *Print all*.
 

@@ -651,3 +651,29 @@ input.color {
     background: transparent !important;
   }
 }
+
+/* ---------- image fields (logo, signature, stamp, photo) ---------- */
+
+.field--image {
+  line-height: 0; /* no stray text-baseline gap under the picture */
+}
+.field-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none; /* the box handles dragging, not the <img> */
+  user-select: none;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.field-img-empty {
+  display: block;
+  padding: 10px;
+  line-height: 1.2;
+  font-size: 12px;
+  color: var(--danger);
+  background: #fdf3f2;
+}
+.inspector .upload-row .btn input[type='file'] {
+  display: none;
+}

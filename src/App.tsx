@@ -9,6 +9,7 @@ import {
   imageAspect,
   importLayout,
   loadLayout,
+  prepareFieldImage,
   readImage,
   saveLayout,
 } from './lib/storage'
@@ -20,6 +21,9 @@ const round2 = (v: number) => Math.round(v * 100) / 100
 const normalizeField = (f: Field): Field => ({
   ...f,
   side: f.side === 'back' ? 'back' : 'front',
+  // Layouts saved before image fields existed have neither property.
+  kind: f.kind === 'image' ? 'image' : 'text',
+  src: f.src ?? '',
   column: f.column ?? '',
   text: f.text ?? '',
   prefix: f.prefix ?? '',
@@ -107,6 +111,8 @@ export default function App() {
       return {
         id: uid(),
         side,
+        kind: 'text',
+        src: '',
         column,
         text,
         prefix: '',
@@ -127,6 +133,45 @@ export default function App() {
     },
     [makeField],
   )
+
+  /** Adds an uploaded picture (logo, signature, stamp, photo) as a field, centred on the card. */
+  const addImageField = useCallback(
+    async (file: File) => {
+      try {
+        const { src, aspect } = await prepareFieldImage(file)
+        const style: FieldStyle = { ...DEFAULT_STYLE, width: 25 }
+        // Height follows the picture, so centre using its real proportions.
+        const heightPct = (((style.width / 100) * card.w * aspect) / card.h) * 100
+        const f: Field = {
+          id: uid(),
+          side,
+          kind: 'image',
+          src,
+          column: '',
+          text: '',
+          prefix: '',
+          suffix: '',
+          x: round2(50 - style.width / 2),
+          y: round2(50 - heightPct / 2),
+          style,
+        }
+        setFields((prev) => [...prev, f])
+        setSelectedId(f.id)
+      } catch {
+        setToast('Could not read that image.')
+      }
+    },
+    [card.w, card.h, side],
+  )
+
+  const replaceFieldImage = useCallback(async (id: string, file: File) => {
+    try {
+      const { src } = await prepareFieldImage(file)
+      setFields((prev) => prev.map((f) => (f.id === id ? { ...f, src } : f)))
+    } catch {
+      setToast('Could not read that image.')
+    }
+  }, [])
 
   const updateField = useCallback((id: string, patch: Partial<Field>) => {
     setFields((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)))
@@ -377,6 +422,7 @@ export default function App() {
           placed={placed}
           onAddColumn={(c) => addField(c, '', 50, 50)}
           onAddStatic={() => addField('', 'Text', 50, 50)}
+          onAddImage={addImageField}
           onSave={() => setToast(saveLayout(currentLayout()) ?? 'Layout saved in this browser.')}
           onLoad={() => {
             const l = loadLayout()
@@ -507,6 +553,7 @@ export default function App() {
           onUpdateStyle={updateStyle}
           onDuplicate={duplicateField}
           onDelete={removeField}
+          onReplaceImage={replaceFieldImage}
         />
       </main>
 

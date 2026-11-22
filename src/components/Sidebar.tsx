@@ -16,6 +16,7 @@ interface Props {
   placed: Record<string, number>
   onAddColumn: (column: string) => void
   onAddStatic: () => void
+  onAddImage: (file: File) => void
 
   onSave: () => void
   onLoad: () => void
@@ -143,6 +144,19 @@ export default function Sidebar(p: Props) {
         <button className="btn btn--ghost btn--small btn--block" onClick={p.onAddStatic}>
           + Add fixed text
         </button>
+        <label className="btn btn--ghost btn--small btn--block">
+          + Add image (logo, signature, photo)
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) p.onAddImage(f)
+              e.target.value = ''
+            }}
+          />
+        </label>
+        <p className="hint">Images added here are printed, unlike the template.</p>
       </section>
 
       <section className="panel">
