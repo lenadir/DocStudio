@@ -11,6 +11,10 @@ interface Props {
   sheetIndex: number
   onPickExcel: (file: File) => void
   onPickSheet: (index: number) => void
+  /** 0-based row holding the column names, and how many rows the grid has. */
+  headerRow: number
+  sheetHeight: number
+  onChangeHeaderRow: (oneBased: number) => void
 
   columns: string[]
   placed: Record<string, number>
@@ -36,8 +40,7 @@ export default function Sidebar(p: Props) {
           <span className="step">1</span> Certificate template
         </h2>
         <p className="hint">
-          On-screen guide only — <strong>the template is never printed</strong>. Only the values
-          you place get printed, onto your pre-printed certificates.
+          Guide only — <strong>never printed</strong>. Only placed values are.
         </p>
         {(['front', 'back'] as Side[]).map((side) => (
           <div className="upload-row" key={side}>
@@ -104,8 +107,25 @@ export default function Sidebar(p: Props) {
                 </select>
               </label>
             )}
+            <label className="control">
+              <span>Header row (where the column names are)</span>
+              <input
+                type="number"
+                min={1}
+                max={Math.max(p.sheetHeight, 1)}
+                step={1}
+                value={p.headerRow + 1}
+                onChange={(e) => {
+                  const n = Number(e.target.value)
+                  if (n >= 1 && n <= p.sheetHeight) p.onChangeHeaderRow(n)
+                }}
+              />
+            </label>
             <p className="hint">
-              {p.sheets[p.sheetIndex]?.rows.length ?? 0} rows · {p.columns.length} columns
+              <strong>
+                {p.sheets[p.sheetIndex]?.rows.length ?? 0} rows · {p.columns.length} columns
+              </strong>
+              {p.sheetHeight > 0 && ` (found ${p.sheetHeight} rows of cells in total)`}
             </p>
           </>
         )}

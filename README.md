@@ -55,8 +55,13 @@ that never saw your design.
 2. **Paper size** — pick a preset in the toolbar or type exact millimetres. This is the
    size that gets printed, so set it to your real certificate stock.
    *Fit to image* re-matches the height to the template's aspect ratio.
-3. **Excel** — upload `.xlsx`, `.xls` or `.csv`. **Row 1 must hold the column names.**
-   Multi-sheet workbooks get a sheet picker.
+3. **Excel** — upload `.xlsx`, `.xls` or `.csv`. The row holding the column names is found
+   automatically, so a title and blank rows above the table are fine; if it picks the wrong
+   one, set **Header row** (it uses the same row numbers as Excel). Multi-sheet workbooks get
+   a sheet picker. The panel shows how many rows and columns were read — check it matches
+   your file. The sheet's own declared range is ignored in favour of the cells that really
+   exist, because exporters often declare one that is too small (data cut off) or far too
+   large (phantom empty columns).
 4. **Place the fields** — drag a column from the left panel onto the card. Drag a field to
    move it, use the right panel for font, size (in mm), colour, alignment, rotation,
    prefix/suffix. Arrow keys nudge (Shift = bigger steps), Delete removes a field.

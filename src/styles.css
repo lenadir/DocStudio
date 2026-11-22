@@ -677,3 +677,41 @@ input.color {
 .inspector .upload-row .btn input[type='file'] {
   display: none;
 }
+
+/* ---------- variable chips: fit many columns without a cramped scroll box ---------- */
+
+.chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  align-content: start;
+  gap: 6px;
+}
+.chip {
+  padding: 6px 8px;
+  gap: 5px;
+  font-size: 12.5px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: flex;
+}
+.chip-grip {
+  flex: 0 0 auto;
+}
+.chip-count {
+  flex: 0 0 auto;
+}
+.panel--grow {
+  min-height: 200px;
+}
+
+/* A scroll box nested inside the scrolling sidebar hid most of the variables.
+   Let the list size to its content and scroll the sidebar as a whole instead. */
+.chips {
+  overflow: visible;
+}
+.panel--grow {
+  flex: 0 0 auto;
+  min-height: 0;
+}

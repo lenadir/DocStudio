@@ -3,7 +3,7 @@ import Editor from './components/Editor'
 import Inspector from './components/Inspector'
 import PrintSheets from './components/PrintSheets'
 import Sidebar from './components/Sidebar'
-import { parseWorkbook } from './lib/excel'
+import { deriveSheet, parseWorkbook } from './lib/excel'
 import {
   exportLayout,
   imageAspect,
@@ -254,13 +254,33 @@ export default function App() {
       setSheetIndex(0)
       setRowIndex(0)
       setExcelName(file.name)
-      if (!list.length || !list[0].columns.length) {
-        setToast('No columns found. Row 1 of the sheet must hold the column names.')
+      const first = list[0]
+      if (!list.length || !first?.columns.length) {
+        setToast('No columns found in that file. Check that the sheet has a row of column names.')
+      } else if (first.headerRow > 0) {
+        setToast(
+          `Column names taken from row ${first.headerRow + 1} (rows above it look like a title). ` +
+            'Change "Header row" on the left if that is wrong.',
+        )
       }
     } catch {
       setToast('Could not read that spreadsheet.')
     }
   }, [])
+
+  /** Re-reads a sheet with a different header row, without re-opening the file. */
+  const changeHeaderRow = useCallback(
+    (oneBased: number) => {
+      setSheets((prev) =>
+        prev.map((s, i) =>
+          i === sheetIndex ? deriveSheet(s.name, s.matrix, oneBased - 1) : s,
+        ),
+      )
+      setRowIndex(0)
+      setToast('Header row changed. Fields bound to the old column names need re-picking.')
+    },
+    [sheetIndex],
+  )
 
   /* ---------- layout persistence ---------- */
 
@@ -418,6 +438,9 @@ export default function App() {
             setSheetIndex(i)
             setRowIndex(0)
           }}
+          headerRow={sheet?.headerRow ?? 0}
+          sheetHeight={sheet?.matrix.length ?? 0}
+          onChangeHeaderRow={changeHeaderRow}
           columns={columns}
           placed={placed}
           onAddColumn={(c) => addField(c, '', 50, 50)}
