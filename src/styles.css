@@ -715,3 +715,29 @@ input.color {
   flex: 0 0 auto;
   min-height: 0;
 }
+
+/* ---------- print row range ---------- */
+
+.row-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.row-range input {
+  width: 62px;
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+}
+.row-range em {
+  font-style: normal;
+}
+.btn.is-busy {
+  opacity: 0.75;
+  cursor: progress;
+}

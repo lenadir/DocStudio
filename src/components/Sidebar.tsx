@@ -11,10 +11,8 @@ interface Props {
   sheetIndex: number
   onPickExcel: (file: File) => void
   onPickSheet: (index: number) => void
-  /** 0-based row holding the column names, and how many rows the grid has. */
-  headerRow: number
-  sheetHeight: number
-  onChangeHeaderRow: (oneBased: number) => void
+  /** True while a workbook is being read: the page is blocked, so say so. */
+  parsing: boolean
 
   columns: string[]
   placed: Record<string, number>
@@ -74,8 +72,12 @@ export default function Sidebar(p: Props) {
         <h2>
           <span className="step">2</span> Excel data
         </h2>
-        <label className="btn btn--small btn--block">
-          {p.excelName ? 'Replace spreadsheet' : 'Upload .xlsx / .xls / .csv'}
+        <label className={`btn btn--small btn--block${p.parsing ? ' is-busy' : ''}`}>
+          {p.parsing
+            ? 'Reading the spreadsheet…'
+            : p.excelName
+              ? 'Replace spreadsheet'
+              : 'Upload .xlsx / .xls / .csv'}
           <input
             ref={excelRef}
             type="file"
@@ -107,25 +109,10 @@ export default function Sidebar(p: Props) {
                 </select>
               </label>
             )}
-            <label className="control">
-              <span>Header row (where the column names are)</span>
-              <input
-                type="number"
-                min={1}
-                max={Math.max(p.sheetHeight, 1)}
-                step={1}
-                value={p.headerRow + 1}
-                onChange={(e) => {
-                  const n = Number(e.target.value)
-                  if (n >= 1 && n <= p.sheetHeight) p.onChangeHeaderRow(n)
-                }}
-              />
-            </label>
             <p className="hint">
               <strong>
                 {p.sheets[p.sheetIndex]?.rows.length ?? 0} rows · {p.columns.length} columns
               </strong>
-              {p.sheetHeight > 0 && ` (found ${p.sheetHeight} rows of cells in total)`}
             </p>
           </>
         )}

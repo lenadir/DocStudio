@@ -54,9 +54,8 @@ export interface SheetData {
   name: string
   columns: string[]
   rows: Record<string, string>[]
-  /** The whole grid as text, kept so the header row can be changed without re-reading the file. */
-  matrix: string[][]
-  /** 0-based index into `matrix` of the row holding the column names. */
+  /** 0-based sheet row the column names came from. Only reported, not kept as a grid:
+   *  holding the whole matrix as well as the records doubled memory on large files. */
   headerRow: number
 }
 

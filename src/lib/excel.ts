@@ -102,7 +102,7 @@ export function deriveSheet(name: string, matrix: string[][], headerRow: number)
     return o
   })
 
-  return { name, columns, rows, matrix, headerRow: safeHeader }
+  return { name, columns, rows, headerRow: safeHeader }
 }
 
 /** Reads every sheet of an .xlsx / .xls / .csv file. */
@@ -113,7 +113,7 @@ export async function parseWorkbook(file: File): Promise<SheetData[]> {
   return wb.SheetNames.map((name) => {
     const ws = wb.Sheets[name]
     const range = usedRange(ws)
-    if (!range) return { name, columns: [], rows: [], matrix: [], headerRow: 0 }
+    if (!range) return { name, columns: [], rows: [], headerRow: 0 }
 
     // raw:false renders dates and numbers the way Excel displays them.
     // blankrows:true keeps the grid aligned with the real row numbers.

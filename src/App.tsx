@@ -3,7 +3,7 @@ import Editor from './components/Editor'
 import Inspector from './components/Inspector'
 import PrintSheets from './components/PrintSheets'
 import Sidebar from './components/Sidebar'
-import { deriveSheet, parseWorkbook } from './lib/excel'
+import { parseWorkbook } from './lib/excel'
 import {
   exportLayout,
   imageAspect,
@@ -51,6 +51,10 @@ export default function App() {
 
   const [printSides, setPrintSides] = useState({ front: true, back: true })
   const [rotateBack, setRotateBack] = useState(false)
+  /** 1-based, inclusive slice of the sheet to print. */
+  const [rangeFrom, setRangeFrom] = useState(1)
+  const [rangeTo, setRangeTo] = useState(1)
+  const [parsing, setParsing] = useState(false)
   const [printRows, setPrintRows] = useState<Record<string, string>[] | null>(null)
   const [toast, setToast] = useState<string | null>(null)
 
@@ -246,6 +250,10 @@ export default function App() {
   }, [])
 
   const pickExcel = useCallback(async (file: File) => {
+    // Reading a workbook is synchronous and blocks the page -- seconds on a big file.
+    // Show the busy state and let the browser paint it first, so the app never looks dead.
+    setParsing(true)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))))
     try {
       const parsed = await parseWorkbook(file)
       const withRows = parsed.filter((s) => s.rows.length > 0)
@@ -265,22 +273,10 @@ export default function App() {
       }
     } catch {
       setToast('Could not read that spreadsheet.')
+    } finally {
+      setParsing(false)
     }
   }, [])
-
-  /** Re-reads a sheet with a different header row, without re-opening the file. */
-  const changeHeaderRow = useCallback(
-    (oneBased: number) => {
-      setSheets((prev) =>
-        prev.map((s, i) =>
-          i === sheetIndex ? deriveSheet(s.name, s.matrix, oneBased - 1) : s,
-        ),
-      )
-      setRowIndex(0)
-      setToast('Header row changed. Fields bound to the old column names need re-picking.')
-    },
-    [sheetIndex],
-  )
 
   /* ---------- layout persistence ---------- */
 
@@ -313,19 +309,48 @@ export default function App() {
     return out
   }, [printSides, hasBack])
 
-  const startPrint = (which: 'current' | 'all') => {
+  const startPrint = (which: 'current' | 'range') => {
     if (!activeSides.length) {
       setToast('Choose at least one side to print.')
       return
     }
-    const data = rows.length ? (which === 'current' ? [values] : rows) : [{}]
-    setPrintRows(data)
-    if (activeSides.length === 2) {
-      setToast(
-        `${data.length} sheet${data.length > 1 ? 's' : ''}: recto then verso for each record. ` +
-          'In the print dialog turn on Two-sided so both land on the same sheet.',
-      )
+    let data: Record<string, string>[]
+    if (!rows.length) data = [{}]
+    else if (which === 'current') data = [values]
+    else data = rows.slice(rangeFrom - 1, rangeTo)
+
+    if (!data.length) {
+      setToast('That row range is empty.')
+      return
     }
+
+    // The browser's print pipeline gets disproportionately slower as pages pile up:
+    // ~1.5s for 500 pages, ~36s for 2000, and 6000 never finished in four minutes.
+    // Past a point the tab simply locks up, so make a huge job a deliberate choice.
+    const pages = data.length * activeSides.length
+    if (
+      pages > 1000 &&
+      !window.confirm(
+        `This will build ${pages} pages from ${data.length} records.\n\n` +
+          'Jobs this big can lock up the browser for several minutes or fail outright. ' +
+          'Printing a few hundred rows at a time with the row range is far more reliable.\n\n' +
+          'Continue anyway?',
+      )
+    ) {
+      return
+    }
+
+    setPrintRows(data)
+    const duplex =
+      activeSides.length === 2
+        ? ' Turn on Two-sided in the print dialog so each verso lands on its own recto.'
+        : ''
+    setToast(
+      pages > 300
+        ? `Building ${pages} pages — this can take a while. If the browser struggles, ` +
+            `print a few hundred rows at a time with the row range.${duplex}`
+        : `${data.length} record${data.length > 1 ? 's' : ''}, ${pages} page${pages > 1 ? 's' : ''}.${duplex}`,
+    )
   }
 
   useEffect(() => {
@@ -354,6 +379,16 @@ export default function App() {
   }
 
   const rowLabel = columns.length ? values[columns[0]] || '—' : '—'
+
+  // Keep the print range inside the sheet, and reset it when the data changes.
+  useEffect(() => {
+    setRangeFrom(1)
+    setRangeTo(Math.max(rows.length, 1))
+  }, [sheetIndex, excelName, rows.length])
+
+  const clampFrom = (n: number) => Math.min(Math.max(n, 1), Math.max(rows.length, 1))
+  const rangeCount = Math.max(0, Math.min(rangeTo, rows.length) - rangeFrom + 1)
+  const printsWholeSheet = rangeFrom === 1 && rangeTo >= rows.length
 
   return (
     <div className="app">
@@ -438,9 +473,7 @@ export default function App() {
             setSheetIndex(i)
             setRowIndex(0)
           }}
-          headerRow={sheet?.headerRow ?? 0}
-          sheetHeight={sheet?.matrix.length ?? 0}
-          onChangeHeaderRow={changeHeaderRow}
+          parsing={parsing}
           columns={columns}
           placed={placed}
           onAddColumn={(c) => addField(c, '', 50, 50)}
@@ -541,11 +574,44 @@ export default function App() {
                 />
                 Flip verso 180°
               </label>
+              {rows.length > 0 && (
+                <span className="row-range" title="Which rows of the spreadsheet to print">
+                  Rows
+                  <input
+                    type="number"
+                    min={1}
+                    max={rows.length}
+                    value={rangeFrom}
+                    onChange={(e) => {
+                      const n = clampFrom(Number(e.target.value))
+                      setRangeFrom(n)
+                      if (n > rangeTo) setRangeTo(n)
+                    }}
+                  />
+                  <span aria-hidden>–</span>
+                  <input
+                    type="number"
+                    min={rangeFrom}
+                    max={rows.length}
+                    value={rangeTo}
+                    onChange={(e) => {
+                      const n = clampFrom(Number(e.target.value))
+                      setRangeTo(n)
+                      if (n < rangeFrom) setRangeFrom(n)
+                    }}
+                  />
+                  <em>of {rows.length}</em>
+                </span>
+              )}
               <button className="btn btn--small" onClick={() => startPrint('current')}>
                 Print this one
               </button>
-              <button className="btn btn--primary btn--small" onClick={() => startPrint('all')}>
-                Print all{rows.length ? ` (${rows.length})` : ''}
+              <button className="btn btn--primary btn--small" onClick={() => startPrint('range')}>
+                {rows.length === 0
+                  ? 'Print'
+                  : printsWholeSheet
+                    ? `Print all (${rows.length})`
+                    : `Print rows ${rangeFrom}–${rangeTo} (${rangeCount})`}
               </button>
             </div>
           </div>

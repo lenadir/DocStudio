@@ -74,7 +74,25 @@ that never saw your design.
    an image added after a text field sits on top of it. Large uploads are scaled down to
    1600 px so Save still fits in the browser's storage.
 5. **Check** — step through rows with `‹` `›` to confirm long names and odd values still fit.
-6. **Print** — tick which sides to print, then *Print this one* or *Print all*.
+6. **Print** — tick which sides to print, set **Rows _from_ – _to_** to choose a slice of the
+   sheet (rows 5–10, say; it defaults to all of them), then *Print this one* for the record
+   on screen or the main button for the range.
+
+### Big lists: print in batches
+
+The browser's print engine slows down disproportionately as pages pile up. Measured on this
+app, with both sides printed:
+
+| Records | Pages | Time to render the print job |
+| ------- | ----- | ---------------------------- |
+| 250     | 500   | 1.5 s                        |
+| 1 000   | 2 000 | 36 s                         |
+| 3 000   | 6 000 | never finished (gave up at 4 minutes) |
+
+Reading the spreadsheet is not the problem: 5 000 rows load in well under a second, and the
+app stays responsive. It is the printing that falls over. So for a long list, use the row
+range and print a few hundred rows at a time. Above 1 000 pages the app asks for
+confirmation first, because a job that size can lock the browser up.
 
 `sample-participants.xlsx` in this folder is a 5-row example to try it with.
 
